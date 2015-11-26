@@ -1,0 +1,78 @@
+<html>
+  <head>
+    <title>Brillo</title>
+    <script>
+        function ajaxRequest(){
+         var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
+         if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
+          for (var i=0; i<activexmodes.length; i++){
+           try{
+            return new ActiveXObject(activexmodes[i])
+           }
+           catch(e){
+            //suppress error
+           }
+          }
+         }
+         else if (window.XMLHttpRequest) // if Mozilla, Safari etc
+          return new XMLHttpRequest()
+         else
+          return false
+        }
+
+        function report(value) {
+          var http=new ajaxRequest()
+          http.onreadystatechange=function(){
+           if (http.readyState==4){
+            if (http.status==200 || window.location.href.indexOf("http")==-1){
+             // document.getElementById("result").innerHTML=http.responseText
+            }
+            else{
+             alert("An error has occured making the request")
+            }
+           }
+          }
+          http.open("GET", "value?brightness="+value, true)
+          http.send(null)
+        }
+    </script>
+  </head>
+
+  <body>
+    <style>
+      body {
+          background: #333 }
+      section {
+          background: #363;
+          color: #bbb;
+          height: 5em;
+          width: 50%;
+          border-radius: 2em;
+          padding: 2em;
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          margin-right: -50%;
+          transform: translate(-50%, -50%) }
+      section p {
+          font-weight: bold;
+          font-family: sans-serif;
+          font-kerning: none;
+          margin-top: 0em;
+          font-size: 2em;
+          text-align: center }
+      section form {
+          margin: 0 auto;
+          text-align: center }
+      section input{
+          width: 75% }
+    </style>
+
+    <section>
+      <p>Brillo</p>
+      <form>
+        <input id="brightness" type="range" value=0 min=0 max=1023 onchange="report(this.value)">
+      </form>
+    </section>
+  </body>
+</html>
