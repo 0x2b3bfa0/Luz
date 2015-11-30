@@ -29,13 +29,13 @@
              // document.getElementById("result").innerHTML=http.responseText
             }
             else{
-             // Forma inteligente de comunicarle al usuario que hay un error
+             // Smart way to notify the user that it forgot to plug the device
              window.location.reload()
              // alert("An error has occured making the request")
             }
            }
           }
-          http.open("GET", "/?brightness="+value, true)
+          http.open("GET", "/?brightness=" + value, true)
           http.send(null)
         }
     </script>
@@ -47,7 +47,7 @@
           background: #C9C9C9 }
       section {
           background: #E3E3E3;
-          color: #A9A9A9;
+          color: #A0A0A0; /*Steel color (Acero Acero Acero)*/
           height: 5em;
           width: auto;
           border-radius: 2em;
@@ -128,7 +128,7 @@
     <section>
       <p>Brillo</p>
       <form>
-        <input id="brightness" type="range" value=0 min=0 max=100 onchange="report(this.value)" oninput="report(this.value)">
+        <input id="brightness" type="range" value=0 min=0 max=100 onchange="report(this.value)">
       </form>
     </section>
   </body>
