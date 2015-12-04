@@ -1,33 +1,77 @@
 #include <ESP8266WiFi.h>
-#include <DNSServer.h>
 #include <ESP8266WebServer.h>
+#include <ArduinoJson.h>
+#include <DNSServer.h>
 #include <FS.h>
-
+#include <ESP8266mDNS.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 #define PIN 16
-#define DEBUG
 
 
 IPAddress apIP(192, 168, 1, 1);
 ESP8266WebServer webServer(80);
 DNSServer dnsServer;
 
-const char *ssid = "Lampara";
-const char *password = "Espressif";
+const char* ssid;
+const char* password;
+const char* 
+
+void handleRoot();
+
+
+void setup() {
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  ArduinoOTA.setPassword((const char *)"");
+  ArduinoOTA.begin();
+  SPIFFS.begin();
+
+  pinMode(PIN, OUTPUT);
+  digitalWrite(PIN, HIGH);
+
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+	WiFi.softAP(ssid, password);
+
+  dnsServer.start(53, "*", apIP);
+
+  webServer.onNotFound(handleRoot);
+  webServer.on("/", handleRoot);
+	webServer.begin();
+
+  Dir dir = SPIFFS.openDir("/");
+  while(dir.next()){
+    File entry = dir.openFile("r");
+    bool isDir = false;
+    Serial.println((isDir)?"dir":"file");
+    Serial.println(String(entry.name()).substring(1));
+    Serial.println();
+    entry.close();
+  }
+}
+
+
+void loop() {
+  dnsServer.processNextRequest();
+  webServer.handleClient();
+  ArduinoOTA.handle();
+}
 
 
 void handleRoot() {
   File file;
   int pwm_value;
-  String brightness = webServer.arg("brightness");
+  String operation = webServer.arg("operation");
   
-  pwm_value = brightness.toInt();
+  pwm_value = operation.toInt();
 
-  if(pwm_value <= 100 && pwm_value > 0 || brightness == "0") {
-    pwm_value = map(pwm_value, 0, 100, 0, 1024);
+  if(pwm_value <= 100 && pwm_value > 0 || operation == "0") {
     webServer.send(200, "text/plain", "OK");
+    pwm_value = map(pwm_value, 0, 100, 0, 1024);
     analogWrite(PIN, pwm_value);
-  } else if(brightness == "-1" || brightness == "'") {
+  } else if(operation == "-1" || operation == "'") {
     file = SPIFFS.open("/easter_egg.html", "r");
     webServer.streamFile(file, "text/html");
     file.close();
@@ -36,47 +80,4 @@ void handleRoot() {
     webServer.streamFile(file, "text/html");
     file.close();
   }
-}
-
-// for file in `ls -A1`; do curl -F "file=@$PWD/$file" esp8266fs.local/; done
-void handleUpload() {
-  File file;
-  HTTPUpload& upload = webServer.upload();
-  if(upload.status == UPLOAD_FILE_START) {
-    String filename = upload.filename;
-    if(!filename.startsWith("/")) filename = "/" + filename;
-    file = SPIFFS.open(filename, "w");
-  } else if(upload.status == UPLOAD_FILE_WRITE) {
-    if(file)
-      file.write(upload.buf, upload.currentSize);
-  } else if(upload.status == UPLOAD_FILE_END) {
-    if(file)
-      file.close();
-  }
-}
-
-
-void setup() {
-  Serial.begin(115200);
-  Serial.setDebugOutput(true);
-  SPIFFS.begin();
-
-  pinMode(PIN, OUTPUT);
-
-  WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-	WiFi.softAP(ssid, password);
-
-  dnsServer.start(53, "*", apIP);
-
-  webServer.on("/", handleRoot);
-  webServer.onNotFound(handleRoot);
-  webServer.onFileUpload(handleUpload);
-	webServer.begin();
- }
-
-
-void loop() {
-  dnsServer.processNextRequest();
-  webServer.handleClient();
 }
