@@ -34,12 +34,11 @@ void setup() {
 	WiFi.softAP(ssid, password);
 
   dnsServer.start(53, "*", apIP);
-
+  
+  webServer.onFileUpload(handleFileUpload);
+  webServer.on("/", HTTP_POST, [](){ webServer.send(200, "text/plain", ""); });
   webServer.onNotFound(handleRoot);
   webServer.on("/", handleRoot);
-  webServer.onFileUpload(handleFileUpload);
-  webServer.on("/", HTTP_POST, [](){ webServer.send(200, "text/plain", ""); }, handleFileUpload);
-
 	webServer.begin();
 
   Dir dir = SPIFFS.openDir("/");
@@ -51,7 +50,6 @@ void setup() {
     Serial.println();
     entry.close();
   }
-
 }
 
 
@@ -84,6 +82,7 @@ void handleRoot() {
   }
 }
 
+
 void handleFileUpload(){
   File fsUploadFile;
   HTTPUpload& upload = webServer.upload();
@@ -100,4 +99,3 @@ void handleFileUpload(){
       fsUploadFile.close();
   }
 }
-
