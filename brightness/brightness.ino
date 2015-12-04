@@ -1,11 +1,11 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266mDNS.h>
 #include <ESP8266WebServer.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 #include <ArduinoJson.h>
 #include <DNSServer.h>
 #include <FS.h>
-#include <ESP8266mDNS.h>
-#include <WiFiUdp.h>
-#include <ArduinoOTA.h>
 
 #define PIN 16
 
@@ -23,8 +23,6 @@ void handleFileUpload();
 
 void setup() {
   Serial.begin(115200);
-  Serial.setDebugOutput(true);
-  ArduinoOTA.setPassword((const char *)"");
   ArduinoOTA.begin();
   SPIFFS.begin();
 
@@ -52,6 +50,7 @@ void setup() {
     Serial.println();
     entry.close();
   }
+
 }
 
 
@@ -84,7 +83,6 @@ void handleRoot() {
   }
 }
 
-
 void handleFileUpload(){
   File fsUploadFile;
   HTTPUpload& upload = webServer.upload();
@@ -101,3 +99,4 @@ void handleFileUpload(){
       fsUploadFile.close();
   }
 }
+
