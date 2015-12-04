@@ -18,7 +18,6 @@ const char* ssid;
 const char* password;
 
 void handleRoot();
-void handleFileUpload();
 
 
 void setup() {
@@ -34,22 +33,10 @@ void setup() {
 	WiFi.softAP(ssid, password);
 
   dnsServer.start(53, "*", apIP);
-  
-  webServer.onFileUpload(handleFileUpload);
-  webServer.on("/", HTTP_POST, [](){ webServer.send(200, "text/plain", ""); });
+
   webServer.onNotFound(handleRoot);
   webServer.on("/", handleRoot);
 	webServer.begin();
-
-  Dir dir = SPIFFS.openDir("/");
-  while(dir.next()){
-    File entry = dir.openFile("r");
-    bool isDir = false;
-    Serial.println((isDir)?"dir":"file");
-    Serial.println(String(entry.name()).substring(1));
-    Serial.println();
-    entry.close();
-  }
 }
 
 
@@ -79,23 +66,5 @@ void handleRoot() {
     file = SPIFFS.open("/index.html", "r");
     webServer.streamFile(file, "text/html");
     file.close();
-  }
-}
-
-
-void handleFileUpload(){
-  File fsUploadFile;
-  HTTPUpload& upload = webServer.upload();
-  if(upload.status == UPLOAD_FILE_START){
-    String filename = upload.filename;
-    if(!filename.startsWith("/")) filename = "/"+filename;
-    fsUploadFile = SPIFFS.open(filename, "w");
-    filename = String();
-  } else if(upload.status == UPLOAD_FILE_WRITE){
-    if(fsUploadFile)
-      fsUploadFile.write(upload.buf, upload.currentSize);
-  } else if(upload.status == UPLOAD_FILE_END){
-    if(fsUploadFile)
-      fsUploadFile.close();
   }
 }
