@@ -3,37 +3,26 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
-#include <ArduinoJson.h>
+// #include <ArduinoJson.h>
 #include <DNSServer.h>
 #include <FS.h>
 
-#define PIN 16
+#define PIN 2
 
 
 IPAddress apIP(192, 168, 1, 1);
 ESP8266WebServer webServer(80);
 DNSServer dnsServer;
 
-const char* ssid;
-const char* password;
+const char* ssid = "Lampara";
+const char* password = "ESP-8266";
 
 void handleRoot();
 
 
 void setup() {
   Serial.begin(115200);
-
-  // Copied from OTA example
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
-  // Copy end
-  
+  Serial.setDebugOutput(true);
   ArduinoOTA.begin();
   SPIFFS.begin();
 
