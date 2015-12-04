@@ -38,6 +38,7 @@ void setup() {
   webServer.onNotFound(handleRoot);
   webServer.on("/", handleRoot);
   webServer.onFileUpload(handleFileUpload);
+  webServer.on("/", HTTP_POST, [](){ webServer.send(200, "text/plain", ""); }, handleFileUpload);
 
 	webServer.begin();
 
