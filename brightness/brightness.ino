@@ -16,9 +16,9 @@ DNSServer dnsServer;
 
 const char* ssid;
 const char* password;
-const char* 
 
 void handleRoot();
+void handleFileUpload();
 
 
 void setup() {
@@ -39,6 +39,8 @@ void setup() {
 
   webServer.onNotFound(handleRoot);
   webServer.on("/", handleRoot);
+  webServer.onFileUpload(handleFileUpload);
+
 	webServer.begin();
 
   Dir dir = SPIFFS.openDir("/");
@@ -79,5 +81,23 @@ void handleRoot() {
     file = SPIFFS.open("/index.html", "r");
     webServer.streamFile(file, "text/html");
     file.close();
+  }
+}
+
+
+void handleFileUpload(){
+  File fsUploadFile;
+  HTTPUpload& upload = webServer.upload();
+  if(upload.status == UPLOAD_FILE_START){
+    String filename = upload.filename;
+    if(!filename.startsWith("/")) filename = "/"+filename;
+    fsUploadFile = SPIFFS.open(filename, "w");
+    filename = String();
+  } else if(upload.status == UPLOAD_FILE_WRITE){
+    if(fsUploadFile)
+      fsUploadFile.write(upload.buf, upload.currentSize);
+  } else if(upload.status == UPLOAD_FILE_END){
+    if(fsUploadFile)
+      fsUploadFile.close();
   }
 }
