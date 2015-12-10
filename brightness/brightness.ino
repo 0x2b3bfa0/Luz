@@ -3,14 +3,19 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
-// #include <ArduinoJson.h>
+#include <ArduinoJson.h>
 #include <DNSServer.h>
 #include <FS.h>
 
+#include "deviceConfig.h"
+
 #define LEDPIN 2
+#define CFG_FILE "/config.json"
 
 #define TXMODE 2   // {'PHY_MODE_11B': 1, 'PHY_MODE_11G': 2, 'PHY_MODE_11N': 3}
 #define TXPOWER 0  // TX power in dBm
+#define TXCHANNEL 7
+
 #define MACADDR {0x00, 0x00, 0x0A, 0x18, 0xA1, 0xED}
 
 #define MODE 0    // {'STA': 0, 'AP': 1, 'STA+AP': 2}
@@ -20,7 +25,7 @@
 #define STA_SSID NULL
 #define STA_PASS NULL
 
-
+StaticJsonBuffer<200> jsonBuffer; // DynamicJsonBuffer jsonBuffer;
 IPAddress apIP(192, 168, 1, 1);
 ESP8266WebServer webServer(80);
 DNSServer dnsServer;
@@ -29,8 +34,11 @@ const char* ssid = "AlbaLED";
 const char* password = "demo-tienda";
 
 void handleRoot();
+void streamFile();
+void setBrightness();
 
-extern "C" { 
+
+extern "C" {
   #include "user_interface.h"
   void __run_user_rf_pre_init(void) {
     uint8_t mac[] = MACADDR;
@@ -46,6 +54,17 @@ void setup() {
   // Serial.setDebugOutput(true);
   ArduinoOTA.begin();
   SPIFFS.begin();
+
+//  file = SPIFFS.open(CFG_FILE, "r");
+//  String line = file.readStringUntil('\n');
+//JsonObject& DataFile = jsonBuffer.parseObject( line );
+//for( JsonObject::iterator it = DataFile.begin(); it != DataFile.end(); ++it ) {
+//  JsonObject& tmpObj = *it;
+//  if( tmpObj["esp"] == "ESP_ROOM_214" ) { // or whatever distiction of ESPs
+//    JsonObject& tmpCfg = tmpObj["config"];
+//    ssid = tmpCfg["ssid"];
+//// .. and so on
+//  }
 
   pinMode(LEDPIN, OUTPUT);
   digitalWrite(LEDPIN, HIGH);
@@ -69,24 +88,46 @@ void loop() {
 }
 
 
-void handleRoot() {
-  File file;
-  int pwm_value;
-  String operation = webServer.arg("operation");
-  
-  pwm_value = operation.toInt();
+void streamFile(String filename) {
+  File file = SPIFFS.open(filename, "r");
+  String mimetype = "text/plain";
+  if (filename.endsWith(".html")) mimetype = "text/html";
+  else if(filename.endsWith(".json")) mimetype = "application/json";
+  else if(filename.endsWith(".htm")) mimetype = "text/html";
+  else if(filename.endsWith(".css")) mimetype = "text/css";
+  else if(filename.endsWith(".png")) mimetype = "image/png";
+  else if(filename.endsWith(".gif")) mimetype = "image/gif";
+  else if(filename.endsWith(".jpg")) mimetype = "image/jpeg";
+  else if(filename.endsWith(".ico")) mimetype = "image/x-icon";
+  else if(filename.endsWith(".xml")) mimetype = "text/xml";
+  else if(filename.endsWith(".zip")) mimetype = "application/zip";
+  else if(filename.endsWith(".js")) mimetype = "application/javascript";
+  webServer.streamFile(file, mimetype);
+  file.close();
+}
 
-  if(pwm_value <= 100 && pwm_value > 0 || operation == "0") {
+
+void setBrightness() {
+  String brightness = webServer.arg("brightness");
+  int pwm_value = brightness.toInt();
+  if(pwm_value < 1024 && pwm_value > 0 || brightness == "0") {
     webServer.send(200, "text/plain", "OK");
-    pwm_value = map(pwm_value, 0, 100, 0, 1024);
     analogWrite(LEDPIN, pwm_value);
-  } else if(operation == "-1" || operation == "'") {
-    file = SPIFFS.open("/easter_egg.html", "r");
-    webServer.streamFile(file, "text/html");
-    file.close();
+  } else if(brightness == "-1" || brightness == "'") {
+    streamFile("/easter_egg.html");
   } else {
-    file = SPIFFS.open("/index.html", "r");
-    webServer.streamFile(file, "text/html");
-    file.close();
+    streamFile("/index.html");
+  }
+}
+
+
+void handleRoot() {
+  String uri = webServer.uri();
+  if(webServer.hasArg("brightness")) {
+    setBrightness();
+  } else if(SPIFFS.exists(uri)) {
+    streamFile(uri);
+  } else {
+    streamFile("/index.html");
   }
 }
