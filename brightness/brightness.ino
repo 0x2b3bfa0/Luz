@@ -8,9 +8,16 @@
 #include <FS.h>
 
 #define LEDPIN 2
-#define TXMODE 2 // PHY_MODE_11G
-#define TXPOWER 0
+
+#define TXMODE 2   // {'PHY_MODE_11B': 1, 'PHY_MODE_11G': 2, 'PHY_MODE_11N': 3}
+#define TXPOWER 0  // TX power in dBm
 #define MACADDR {0x00, 0x00, 0x0A, 0x18, 0xA1, 0xED}
+
+#define MODE 0    // {'STA': 0, 'AP': 1, 'STA+AP': 2}
+#define AP_SSID
+#define AP_PASS
+#define STA_SSID
+#define STA_PASS
 
 
 IPAddress apIP(192, 168, 1, 1);
@@ -39,8 +46,8 @@ void setup() {
   ArduinoOTA.begin();
   SPIFFS.begin();
 
-  pinMode(PIN, OUTPUT);
-  digitalWrite(PIN, HIGH);
+  pinMode(LEDPIN, OUTPUT);
+  digitalWrite(LEDPIN, HIGH);
 
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
@@ -71,7 +78,7 @@ void handleRoot() {
   if(pwm_value <= 100 && pwm_value > 0 || operation == "0") {
     webServer.send(200, "text/plain", "OK");
     pwm_value = map(pwm_value, 0, 100, 0, 1024);
-    analogWrite(PIN, pwm_value);
+    analogWrite(LEDPIN, pwm_value);
   } else if(operation == "-1" || operation == "'") {
     file = SPIFFS.open("/easter_egg.html", "r");
     webServer.streamFile(file, "text/html");
