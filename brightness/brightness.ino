@@ -8,7 +8,7 @@
 #include <FS.h>
 
 #define LEDPIN 2
-#define TXMODE PHY_MODE_11G //2
+#define TXMODE 2 // PHY_MODE_11G
 #define TXPOWER 0
 #define MACADDR {0x00, 0x00, 0x0A, 0x18, 0xA1, 0xED}
 
