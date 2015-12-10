@@ -14,10 +14,11 @@
 #define MACADDR {0x00, 0x00, 0x0A, 0x18, 0xA1, 0xED}
 
 #define MODE 0    // {'STA': 0, 'AP': 1, 'STA+AP': 2}
-#define AP_SSID
-#define AP_PASS
-#define STA_SSID
-#define STA_PASS
+#define AP_HIDE 0 // {'VISIBLE': 0, 'HIDDEN': 1}
+#define AP_SSID "AlbaLED"
+#define AP_PASS "LED-CTRL"
+#define STA_SSID NULL
+#define STA_PASS NULL
 
 
 IPAddress apIP(192, 168, 1, 1);
