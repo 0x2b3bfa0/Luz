@@ -7,17 +7,30 @@
 #include <DNSServer.h>
 #include <FS.h>
 
-#define PIN 2
+#define LEDPIN 2
+#define TXMODE PHY_MODE_11G //2
+#define TXPOWER 0
+#define MACADDR {0x00, 0x00, 0x0A, 0x18, 0xA1, 0xED}
 
 
 IPAddress apIP(192, 168, 1, 1);
 ESP8266WebServer webServer(80);
 DNSServer dnsServer;
 
-const char* ssid = "Lampara";
-const char* password = "ESP-8266";
+const char* ssid = "AlbaLED";
+const char* password = "demo-tienda";
 
 void handleRoot();
+
+extern "C" { 
+  #include "user_interface.h"
+  void __run_user_rf_pre_init(void) {
+    uint8_t mac[] = MACADDR;
+    system_phy_set_max_tpw(TXPOWER);
+    wifi_set_phy_mode(PHY_MODE_11G);
+    wifi_set_macaddr(SOFTAP_IF, &mac[0]);
+  }
+}
 
 
 void setup() {
