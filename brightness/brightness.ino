@@ -51,7 +51,7 @@ extern "C" {
 
 void setup() {
   Serial.begin(115200);
-  // Serial.setDebugOutput(true);
+  Serial.setDebugOutput(true);
   ArduinoOTA.begin();
   SPIFFS.begin();
 

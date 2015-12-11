@@ -35,7 +35,7 @@
             }
            }
           }
-          http.open("GET", "/?operation=" + value, true)
+          http.open("GET", "/?brightness=" + value, true)
           http.send(null)
         }
     </script>
@@ -128,7 +128,7 @@
     <section>
       <p>Brillo</p>
       <form>
-        <input id="brightness" type="range" value=0 min=0 max=100 onchange="report(this.value)" oninput="report(this.value)">
+        <input id="brightness" type="range" value=0 min=0 max=1023 onchange="report(this.value)" oninput="report(this.value)">
       </form>
     </section>
   </body>
