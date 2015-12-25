@@ -1,130 +1,13 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Brillo</title>
-    <script>
-        function ajaxRequest(){
-         var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"]
-         if (window.ActiveXObject){
-          for (var i=0; i<activexmodes.length; i++){
-           try{
-            return new ActiveXObject(activexmodes[i])
-           }
-           catch(e){
-            //suppress error
-           }
-          }
-         }
-         else if (window.XMLHttpRequest)
-          return new XMLHttpRequest()
-         else
-          return false
-        }
-
-        function report(value) {
-          var http=new ajaxRequest()
-          http.onreadystatechange=function(){
-           if (http.readyState==4){
-            if (http.status==200 || window.location.href.indexOf("http")==-1){
-             // document.getElementById("result").innerHTML=http.responseText
-            }
-            else{
-             // Smart way to notify the user that it forgot to plug the device
-             window.location.reload()
-             // alert("An error has occured making the request")
-            }
-           }
-          }
-          http.open("GET", "/?brightness=" + value, true)
-          http.send(null)
-        }
-    </script>
+    <title>Luz</title>
+    <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
+    <script type="text/javascript" src="./ajaxRequest.js" ></script>
+    <script type="text/javascript" src="./main.js" ></script>
   </head>
 
   <body>
-    <style>
-      body {
-          background: #C9C9C9 }
-      section {
-          background: #E3E3E3;
-          color: #A0A0A0; /*Steel color (Acero Acero Acero)*/
-          height: 5em;
-          width: auto;
-          border-radius: 2em;
-          padding: 2em;
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          margin-right: -50%;
-          transform: translate(-50%, -50%) }
-      section p {
-          font-weight: bold;
-          font-family: sans-serif;
-          font-kerning: none;
-          margin-top: 0em;
-          font-size: 2em;
-          text-align: center }
-      section form {
-          margin: 0 auto;
-          text-align: center }
-      input[type=range] {
-          -webkit-appearance: none;
-          border: 1px solid white;
-          width: 300px; }
-      input[type=range]::-webkit-slider-runnable-track {
-          width: 300px;
-          height: 5px;
-          background: #9AD3DE;
-          border: none;
-          border-radius: 3px; }
-      input[type=range]::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          border: none;
-          height: 48px;
-          width: 48px;
-          border-radius: 50%;
-          background: #89BDD3;
-          margin-top: -24px; }
-      input[type=range]:focus {
-          outline: none; }
-      input[type=range]::-moz-range-track {
-          width: 300px;
-          height: 5px;
-          background: #9AD3DE;
-          border: none;
-          border-radius: 3px; }
-      input[type=range]::-moz-range-thumb {
-          border: none;
-          height: 48px;
-          width: 48px;
-          border-radius: 50%;
-          background: #89BDD3; }
-      input[type=range]::-ms-track {
-          width: 300px;
-          height: 5px;
-          background: transparent;
-          border-color: transparent;
-          border-width: 6px 0;
-          color: transparent; }
-      input[type=range]::-ms-thumb {
-          border: none;
-          height: 48px;
-          width: 48px;
-          border-radius: 50%;
-          background: #89BDD3; }
-          input[type='range'],
-      input[type='range']:focus,
-      input[type='range']:active,
-      input[type='range']::-moz-focus-inner,
-      input[type='range']:-moz-focusring {
-          border: 0;
-          outline: none;
-      }
-      input[type=range]::-moz-focus-outer {
-          border: 0;
-      }
-    </style>
-
     <section>
       <p>Brillo</p>
       <form>
