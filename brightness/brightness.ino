@@ -108,22 +108,22 @@ void streamFile(String filename) {
 
 
 void setBrightness() {
-  String brightness = webServer.arg("brightness");
-  int pwm_value = brightness.toInt();
-  if(pwm_value < 1024 && pwm_value > 0 || brightness == "0") {
-    webServer.send(200, "text/plain", "OK");
-    analogWrite(LEDPIN, pwm_value);
-  } else if(brightness == "-1" || brightness == "'") {
-    streamFile("/easter_egg.html");
+  String value = webServer.arg("value");
+  if(brightness == "0") {
+    webServer.send(200, "text/plain", "0");
+    digitalWrite(LEDPIN, LOW);
+  } else if(brightness == "1") {
+    webServer.send(200, "text/plain", "1");
+    digitalWrite(LEDPIN, HIGH);
   } else {
-    streamFile("/index.html");
+    streamFile("/easter_egg.html");
   }
 }
 
 
 void handleRoot() {
   String uri = webServer.uri();
-  if(webServer.hasArg("brightness")) {
+  if(webServer.hasArg("value")) {
     setBrightness();
   } else if(SPIFFS.exists(uri)) {
     streamFile(uri);
