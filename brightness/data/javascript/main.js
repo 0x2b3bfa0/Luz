@@ -29,14 +29,10 @@ function color_toggle() {
 
 function light_toggle() {
   if (canvas.class == "0") {
-    value = 1;
-    canvas.class = "1";
-    http.open("GET", "/?value=0", true);
+    http.open("GET", "/?value=1", true);
     http.send(null);
   } else {
-    value = 0;
-    canvas.class = "0";
-    http.open("GET", "/?value=1", true);
+    http.open("GET", "/?value=0", true);
     http.send(null);
   }
 }
