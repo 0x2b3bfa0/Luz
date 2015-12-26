@@ -16,7 +16,7 @@
 #define TXPOWER 0  // TX power in dBm
 #define TXCHANNEL 7
 
-#define MACADDR {0x00, 0x00, 0x0A, 0x18, 0xA1, 0xED}
+#define MACADDR {0x00, 0x00, 0x01, 0xED, 0xA1, 0xBA}
 
 #define MODE 0    // {'STA': 0, 'AP': 1, 'STA+AP': 2}
 #define AP_HIDE 0 // {'VISIBLE': 0, 'HIDDEN': 1}
