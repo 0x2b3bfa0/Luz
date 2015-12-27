@@ -7,8 +7,6 @@
 #include <DNSServer.h>
 #include <FS.h>
 
-#include "deviceConfig.h"
-
 #define LEDPIN 2
 #define CFG_FILE "/config.json"
 
@@ -20,18 +18,18 @@
 
 #define MODE 0    // {'STA': 0, 'AP': 1, 'STA+AP': 2}
 #define AP_HIDE 0 // {'VISIBLE': 0, 'HIDDEN': 1}
-#define AP_SSID "AlbaLED"
-#define AP_PASS "LED-CTRL"
+#define AP_SSID "Luz"
+#define AP_PASS "demo-led"
 #define STA_SSID NULL
 #define STA_PASS NULL
 
-StaticJsonBuffer<200> jsonBuffer; // DynamicJsonBuffer jsonBuffer;
+// StaticJsonBuffer<200> jsonBuffer; // DynamicJsonBuffer jsonBuffer;
 IPAddress apIP(192, 168, 1, 1);
 ESP8266WebServer webServer(80);
 DNSServer dnsServer;
 
-const char* ssid = "AlbaLED";
-const char* password = "demo-tienda";
+const char* ssid = "Luz";
+const char* password = "demo-led";
 
 void handleRoot();
 void streamFile();
@@ -67,7 +65,7 @@ void setup() {
 //  }
 
   pinMode(LEDPIN, OUTPUT);
-  digitalWrite(LEDPIN, HIGH);
+  digitalWrite(LEDPIN, LOW);
 
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
@@ -109,12 +107,19 @@ void streamFile(String filename) {
 
 void setBrightness() {
   String value = webServer.arg("value");
-  if(brightness == "0") {
-    webServer.send(200, "text/plain", "0");
-    digitalWrite(LEDPIN, LOW);
-  } else if(brightness == "1") {
+  if(value == "1") {
     webServer.send(200, "text/plain", "1");
+    digitalWrite(LEDPIN, LOW);
+  } else if(value == "0") {
+    webServer.send(200, "text/plain", "0");
     digitalWrite(LEDPIN, HIGH);
+  } else if(value == "get") {
+    int state = digitalRead(LEDPIN);
+    if(state == HIGH) {
+      webServer.send(200, "text/plain", "0");
+    } else {
+      webServer.send(200, "text/plain", "1");
+    }
   } else {
     streamFile("/easter_egg.html");
   }

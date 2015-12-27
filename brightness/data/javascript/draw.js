@@ -15,7 +15,7 @@ var canvas = function() {
   // #path4225
   ctx.strokeStyle = 'rgb(0, 0, 0)';
   ctx.lineWidth = 1;
-  ctx.fillStyle = 'rgb(0, 0, 0)';
+  ctx.fillStyle = 'rgb(255, 255, 255)';
   ctx.beginPath();
   ctx.moveTo(-231.867390, 115.253880);
   ctx.bezierCurveTo(-231.867390, 95.511711, -247.870080, 79.509023, -267.612250, 79.509023);

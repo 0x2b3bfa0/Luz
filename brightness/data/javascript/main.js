@@ -19,20 +19,26 @@ http.onreadystatechange=function() {
 
 function color_toggle() {
   if (canvas.class == "0") {
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = "#000000";
     ctx.fill();
   } else {
-    ctx.fillStyle = "#000000";
+    ctx.fillStyle = "#FFFFFF";
     ctx.fill();
   }
 }
 
 function light_toggle() {
   if (canvas.class == "0") {
-    http.open("GET", "/?value=1", true);
-    http.send(null);
+    do_request("1");
   } else {
-    http.open("GET", "/?value=0", true);
-    http.send(null);
+    do_request("0");
   }
 }
+
+function do_request(value) {
+  if (null == value) { value = "get"; }
+  http.open("GET", "/?value=" + value, true);
+  http.send(null);
+}
+
+setInterval(do_request, 1000);
