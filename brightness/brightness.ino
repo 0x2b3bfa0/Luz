@@ -7,8 +7,6 @@
 #include <DNSServer.h>
 #include <FS.h>
 
-#include "deviceConfig.h"
-
 #define LEDPIN 2
 #define CFG_FILE "/config.json"
 
@@ -16,22 +14,22 @@
 #define TXPOWER 0  // TX power in dBm
 #define TXCHANNEL 7
 
-#define MACADDR {0x00, 0x00, 0x0A, 0x18, 0xA1, 0xED}
+#define MACADDR {0x00, 0x00, 0x01, 0xED, 0xA1, 0xBA}
 
 #define MODE 0    // {'STA': 0, 'AP': 1, 'STA+AP': 2}
 #define AP_HIDE 0 // {'VISIBLE': 0, 'HIDDEN': 1}
-#define AP_SSID "AlbaLED"
-#define AP_PASS "LED-CTRL"
+#define AP_SSID "Luz"
+#define AP_PASS "demo-led"
 #define STA_SSID NULL
 #define STA_PASS NULL
 
-StaticJsonBuffer<200> jsonBuffer; // DynamicJsonBuffer jsonBuffer;
+// StaticJsonBuffer<200> jsonBuffer; // DynamicJsonBuffer jsonBuffer;
 IPAddress apIP(192, 168, 1, 1);
 ESP8266WebServer webServer(80);
 DNSServer dnsServer;
 
-const char* ssid = "AlbaLED";
-const char* password = "demo-tienda";
+const char* ssid = "Luz";
+const char* password = "demo-led";
 
 void handleRoot();
 void streamFile();
@@ -67,11 +65,12 @@ void setup() {
 //  }
 
   pinMode(LEDPIN, OUTPUT);
-  digitalWrite(LEDPIN, HIGH);
+  digitalWrite(LEDPIN, LOW);
 
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-	WiFi.softAP(ssid, password);
+	WiFi.softAP(ssid); // 	WiFi.softAP(ssid, password);
+
 
   dnsServer.start(53, "*", apIP);
 
@@ -108,22 +107,29 @@ void streamFile(String filename) {
 
 
 void setBrightness() {
-  String brightness = webServer.arg("brightness");
-  int pwm_value = brightness.toInt();
-  if(pwm_value < 1024 && pwm_value > 0 || brightness == "0") {
-    webServer.send(200, "text/plain", "OK");
-    analogWrite(LEDPIN, pwm_value);
-  } else if(brightness == "-1" || brightness == "'") {
-    streamFile("/easter_egg.html");
+  String value = webServer.arg("value");
+  if(value == "1") {
+    webServer.send(200, "text/plain", "1");
+    digitalWrite(LEDPIN, LOW);
+  } else if(value == "0") {
+    webServer.send(200, "text/plain", "0");
+    digitalWrite(LEDPIN, HIGH);
+  } else if(value == "get") {
+    int state = digitalRead(LEDPIN);
+    if(state == HIGH) {
+      webServer.send(200, "text/plain", "0");
+    } else {
+      webServer.send(200, "text/plain", "1");
+    }
   } else {
-    streamFile("/index.html");
+    streamFile("/easter_egg.html");
   }
 }
 
 
 void handleRoot() {
   String uri = webServer.uri();
-  if(webServer.hasArg("brightness")) {
+  if(webServer.hasArg("value")) {
     setBrightness();
   } else if(SPIFFS.exists(uri)) {
     streamFile(uri);

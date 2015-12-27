@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" type="text/css" href="./css/style.css" media="screen" />
+    <script type="text/javascript" src="./javascript/ajaxRequest.js" ></script>
+    <script type="text/javascript" src="./javascript/draw.js" ></script>
+    <script type="text/javascript" src="./javascript/main.js" ></script>
     <title>Luz</title>
-    <link rel="stylesheet" type="text/css" href="style.css" media="screen" />
-    <script type="text/javascript" src="./ajaxRequest.js" ></script>
-    <script type="text/javascript" src="./main.js" ></script>
   </head>
 
   <body>
-    <section>
-      <p>Brillo</p>
-      <form>
-        <input id="brightness" type="range" value=0 min=0 max=1023 onchange="report(this.value)" oninput="report(this.value)">
-      </form>
-    </section>
+    <canvas id="canvas" width='317' height='546'></canvas>
+    <script type="text/javascript">canvas();</script>
   </body>
 </html>
