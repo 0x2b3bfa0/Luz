@@ -4,13 +4,13 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <link rel="stylesheet" type="text/css" href="./css/style.css" media="screen" />
     <script type="text/javascript" src="./javascript/ajaxRequest.js" ></script>
-    <script type="text/javascript" src="./javascript/draw.js" ></script>
     <script type="text/javascript" src="./javascript/main.js" ></script>
     <title>Luz</title>
   </head>
 
   <body>
-    <canvas id="canvas" width='317' height='546'></canvas>
-    <script type="text/javascript">canvas();</script>
+    <section>
+      <input type="range" id="brightness" min="0" max="1024" step="32" value="0" onchange="request(this.value)" />
+    </section>
   </body>
 </html>
