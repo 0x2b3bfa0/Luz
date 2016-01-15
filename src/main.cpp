@@ -10,41 +10,48 @@
 #include <EEPROM.h>
 #include <FS.h>
 
-// #include "main.h"
+#include "main.h"
 
-#define TXMODE 2   // {'PHY_MODE_11B': 1, 'PHY_MODE_11G': 2, 'PHY_MODE_11N': 3}
-#define TXPOWER 0  // TX power in dBm
-#define TXCHANNEL 7
+int config_load() {
+  if(!filename.startsWith("/")) filename = '/' + filename;
 
-#define LEDPIN 2
+  SPIFFS.begin();
 
-#define MACADDR {0x00, 0x00, 0x01, 0xED, 0xA1, 0xBA}
+  configFile = SPIFFS.open(filename, "rw");
+  if (!configFile) return 1;
 
-// #define MODE 0    // {'STA': 0, 'AP': 1, 'STA+AP': 2}
-// #define AP_HIDE 0 // {'VISIBLE': 0, 'HIDDEN': 1}
-#define AP_SSID "Luz"
-// #define AP_PASS "demo-led"
-// #define STA_SSID NULL
-// #define STA_PASS NULL
+  size_t size = configFile.size();
+  if (size > 1024) return 2;
 
-// StaticJsonBuffer<200> jsonBuffer;
+  buf = new char[size];
+
+  configFile.readBytes(buf.get(), size);
+  json = jsonBuffer.parseObject(buf.get());
+  if (!json.success()) return 3;
+  return 0;
+}
+
+int config_save() {
+  if (!configFile) return 1;
+  json.printTo(configFile);
+  return 0;
+}
+
 IPAddress apIP(192, 168, 1, 1);
 ESP8266WebServer webServer(80);
 DNSServer dnsServer;
 
-void handleRoot();
-void setBrightness();
-void streamFile();
-
-extern "C" {
-  #include "user_interface.h"
-  void __run_user_rf_pre_init(void) {
-    uint8_t mac[] = MACADDR;
-    system_phy_set_max_tpw(TXPOWER);
-    wifi_set_phy_mode(PHY_MODE_11G);
-    wifi_set_macaddr(SOFTAP_IF, &mac[0]);
-  }
-}
+// extern "C" {
+//   #include "user_interface.h"
+//   void __run_user_rf_pre_init(void) {
+//     uint8_t mac[] = MACADDR;
+//     system_phy_set_max_tpw(TXPOWER);
+//     wifi_set_phy_mode(PHY_MODE_11G);
+//     wifi_set_macaddr(SOFTAP_IF, &mac[0]);
+//   }
+// }
+ #define LEDPIN 2
+ #define AP_SSID "Luz"
 
 
 void setup() {
@@ -127,14 +134,7 @@ void setBrightness() {
     webServer.send(200, "text/plain", state);
   } else {
     int number = 1024 - value.toInt();
-    int aux_number = number;
-    byte B;
     analogWrite(LEDPIN, number);
-    for (int i = 0; i < sizeof(number); i++){
-      B = highByte(aux_number);
-      EEPROM.write(i, B);
-      aux_number = aux_number << 8;
-    }
     webServer.send(200, "text/plain", "OK");
   }
 }
