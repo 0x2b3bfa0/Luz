@@ -1,1 +1,28 @@
-{'brightness': '1024'}
+{
+  "network": {
+    "access_point": {
+      "essid": "Luz",
+      "bssid": "00:11:22:33:44:55",
+      "password": "",
+      "gateway": "192.168.1.1",
+      "subnet_mask": "192.168.1.1",
+      "ip_address": "192.168.1.1",
+    },
+    "client": {
+      "essid": "",
+      "bssid": "",
+      "password": "",
+      "dns": "192.168.1.1",
+      "gateway": "192.168.1.1",
+      "subnet_mask": "192.168.1.1",
+      "ip_address": "192.168.1.1"
+    },
+    "txmode": "n",
+    "txpower": "20",
+    "channel": "6"
+
+  },
+  "light": {
+    "brightness": 0
+  }
+}

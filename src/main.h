@@ -9,15 +9,16 @@
 #include <DNSServer.h>
 #include <FS.h>
 
-void streamFile();
+void setup();
+void loop();
+
+void fail();
+void start();
+void streamFile(String filename);
 void handleRoot();
-void config_read();
-void config_write();
-void setBrightness();
+bool config_read();
+bool config_write();
+void setBrightness(String value);
 
-DNSServer dnsServer;
-ESP8266WebServer webServer(80);
-IPAddress apIP(192, 168, 1, 1);
-
-File configFile;
-DynamicJsonBuffer jsonBuffer;
+int brightness;
+int brightness_pin;

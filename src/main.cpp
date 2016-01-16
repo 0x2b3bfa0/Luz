@@ -1,72 +1,32 @@
 #include "main.h"
 
-void config_read() {
-  configFile = SPIFFS.open("/config.json", "w+");
-  size_t size = configFile.size();
-  std::unique_ptr<char[]> buf(new char[size]);
-  configFile.readBytes(buf.get(), size);
-  JsonObject& json = jsonBuffer.parseObject(buf.get());
-  const char* brightness = json["brightness"];
-  Serial.print("Level: ");
-  Serial.println(brightness);
-}
 
-void config_write() {
-  // configFile = SPIFFS.open("/config.json", "w");
-  JsonObject& json = jsonBuffer.createObject();
-  json["brightness"] = "brightnessQ";
-  json.printTo(configFile);
-}
-#define LEDPIN 2
-
-
-// extern "C" {
-//   #include "user_interface.h"
-//   void __run_user_rf_pre_init(void) {
-//     uint8_t mac[] = MACADDR;
-//     system_phy_set_max_tpw(TXPOWER);
-//     wifi_set_phy_mode(PHY_MODE_11G);
-//     wifi_set_macaddr(SOFTAP_IF, &mac[0]);
-//   }
-// }
+File configFile;
+DNSServer dnsServer;
+ESP8266WebServer webServer(80);
+IPAddress apIP(192, 168, 1, 1);
 
 
 void setup() {
-  Serial.begin(115200);
-  //Serial.setDebugOutput(true);
-  // ArduinoOTA.begin();
-  if (!SPIFFS.begin()) { Serial.println("Failed to mount file system"); }
-  //delay(1000);
-  config_read();
-  config_write();
-
-
-//  file = SPIFFS.open(CFG_FILE, "r");
-//  String line = file.readStringUntil('\n');
-//JsonObject& DataFile = jsonBuffer.parseObject( line );
-//for( JsonObject::iterator it = DataFile.begin(); it != DataFile.end(); ++it ) {
-//  JsonObject& tmpObj = *it;
-//  if( tmpObj["esp"] == "ESP_ROOM_214" ) { // or whatever distiction of ESPs
-//    JsonObject& tmpCfg = tmpObj["config"];
-//    ssid = tmpCfg["ssid"];
-//// .. and so on
-//  }
-
-  pinMode(LEDPIN, OUTPUT);
   analogWriteFreq(100);
+  Serial.begin(115200);
+  Serial.println();
 
-  //analogWrite(LEDPIN, number);
+  if(!SPIFFS.begin()) {
+    Serial.println("[!] Filesystem error!");
+    fail();
+  } else if(!config_read()) {
+    Serial.println("[!] Configuration error!");
+    fail();
+  } else {
+    start();
+  }
+  // Serial.setDebugOutput(true);
+  // ArduinoOTA.begin();
 
-  WiFi.mode(WIFI_AP);
-  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-	WiFi.softAP("Luz"); // 	WiFi.softAP(ssid, password);
+  pinMode(brightness_pin, OUTPUT);
+  analogWrite(brightness_pin, brightness);
 
-
-  dnsServer.start(53, "*", apIP);
-
-  webServer.onNotFound(handleRoot);
-  webServer.on("/", handleRoot);
-	webServer.begin();
 }
 
 
@@ -74,6 +34,67 @@ void loop() {
   dnsServer.processNextRequest();
   webServer.handleClient();
   // ArduinoOTA.handle();
+}
+
+
+void start() {
+   WiFi.mode(WIFI_AP_STA);
+   WiFi.begin()
+   WiFi.config()
+   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+   WiFi.softAP("Luz"); // 	WiFi.softAP(ssid, password);
+
+   dnsServer.start(53, "*", apIP);
+
+   webServer.onNotFound(handleRoot);
+   webServer.on("/", handleRoot);
+   webServer.begin();
+}
+
+
+void fail() {
+  Serial.println("[!] Halted!");
+  while(1) delay(1);
+}
+
+
+bool config_read() {
+  DynamicJsonBuffer jsonBuffer;
+  configFile = SPIFFS.open("/config.json", "r");
+  if(!configFile) return false;
+  size_t size = configFile.size();
+  std::unique_ptr<char[]> buf(new char[size]);
+  configFile.readBytes(buf.get(), size);
+  JsonObject& root = jsonBuffer.parseObject(buf.get());
+  if(!root.success()) return false;
+                      const char* brightness = root["brightness"];
+                      Serial.print("Level: ");
+                      Serial.println(brightness);
+  return true;
+}
+
+
+bool config_write() {
+  DynamicJsonBuffer jsonBuffer;
+  configFile = SPIFFS.open("/config.json", "w");
+  if(!configFile) return false;
+  JsonObject& root = jsonBuffer.createObject();
+                  root["brightness"] = brightness;
+  root.printTo(configFile);
+  return true;
+}
+
+
+void handleRoot() {
+  String uri = webServer.uri();
+  if(webServer.hasArg("value")) {
+    setBrightness(webServer.arg("value"));
+  } else if(SPIFFS.exists(uri)) {
+//} else if(SPIFFS.exists(uri) && uri != "/config.json") {
+    streamFile(uri);
+  } else {
+    streamFile("/index.html");
+  }
 }
 
 
@@ -96,27 +117,13 @@ void streamFile(String filename) {
 }
 
 
-void setBrightness() {
-  String value = webServer.arg("value");
+void setBrightness(String value) {
   if(value == "get") {
-    String state = String(1024 - analogRead(LEDPIN));
+    String state = String(1024 - analogRead(brightness_pin));
     webServer.send(200, "text/plain", state);
   } else {
-    int number = 1024 - value.toInt();
-    analogWrite(LEDPIN, number);
+    brightness = 1024 - value.toInt();
+    analogWrite(brightness_pin, brightness);
     webServer.send(200, "text/plain", "OK");
-  }
-}
-
-
-void handleRoot() {
-  String uri = webServer.uri();
-  if(webServer.hasArg("value")) {
-    setBrightness();
-  } else if(SPIFFS.exists(uri)) {
-  //} else if(SPIFFS.exists(uri) && uri != "/config.json") {
-    streamFile(uri);
-  } else {
-    streamFile("/index.html");
   }
 }
