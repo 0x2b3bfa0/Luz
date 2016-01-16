@@ -1,45 +1,24 @@
-#include <Arduino.h>
-
-#include <ESP8266WiFi.h>
-#include <ESP8266mDNS.h>
-// #include <WiFiUdp.h>
-// #include <ArduinoOTA.h>
-#include <ESP8266WebServer.h>
-// #include <ArduinoJson.h>
-#include <DNSServer.h>
-#include <EEPROM.h>
-#include <FS.h>
-
 #include "main.h"
 
-int config_load() {
-  if(!filename.startsWith("/")) filename = '/' + filename;
-
-  SPIFFS.begin();
-
-  configFile = SPIFFS.open(filename, "rw");
-  if (!configFile) return 1;
-
+void config_read() {
+  configFile = SPIFFS.open("/config.json", "w+");
   size_t size = configFile.size();
-  if (size > 1024) return 2;
-
-  buf = new char[size];
-
+  std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
-  json = jsonBuffer.parseObject(buf.get());
-  if (!json.success()) return 3;
-  return 0;
+  JsonObject& json = jsonBuffer.parseObject(buf.get());
+  const char* brightness = json["brightness"];
+  Serial.print("Level: ");
+  Serial.println(brightness);
 }
 
-int config_save() {
-  if (!configFile) return 1;
+void config_write() {
+  // configFile = SPIFFS.open("/config.json", "w");
+  JsonObject& json = jsonBuffer.createObject();
+  json["brightness"] = "brightnessQ";
   json.printTo(configFile);
-  return 0;
 }
+#define LEDPIN 2
 
-IPAddress apIP(192, 168, 1, 1);
-ESP8266WebServer webServer(80);
-DNSServer dnsServer;
 
 // extern "C" {
 //   #include "user_interface.h"
@@ -50,15 +29,17 @@ DNSServer dnsServer;
 //     wifi_set_macaddr(SOFTAP_IF, &mac[0]);
 //   }
 // }
- #define LEDPIN 2
- #define AP_SSID "Luz"
 
 
 void setup() {
   Serial.begin(115200);
-  Serial.setDebugOutput(true);
+  //Serial.setDebugOutput(true);
   // ArduinoOTA.begin();
-  SPIFFS.begin();
+  if (!SPIFFS.begin()) { Serial.println("Failed to mount file system"); }
+  //delay(1000);
+  config_read();
+  config_write();
+
 
 //  file = SPIFFS.open(CFG_FILE, "r");
 //  String line = file.readStringUntil('\n');
@@ -74,23 +55,11 @@ void setup() {
   pinMode(LEDPIN, OUTPUT);
   analogWriteFreq(100);
 
-  int number = 0;
-  int B;
-
-  for (int i = sizeof(number); i > 0 ; i--){
-     B = EEPROM.read(i-1);
-     if (i != 1){
-       B = B << (8*i);
-     }
-     number = number | B;
-     B = 0;
-   }
-
-  analogWrite(LEDPIN, number);
+  //analogWrite(LEDPIN, number);
 
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-	WiFi.softAP(AP_SSID); // 	WiFi.softAP(ssid, password);
+	WiFi.softAP("Luz"); // 	WiFi.softAP(ssid, password);
 
 
   dnsServer.start(53, "*", apIP);
@@ -145,6 +114,7 @@ void handleRoot() {
   if(webServer.hasArg("value")) {
     setBrightness();
   } else if(SPIFFS.exists(uri)) {
+  //} else if(SPIFFS.exists(uri) && uri != "/config.json") {
     streamFile(uri);
   } else {
     streamFile("/index.html");
