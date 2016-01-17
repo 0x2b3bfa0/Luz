@@ -36,7 +36,8 @@ void loop() {
 
 void start() {
   analogWriteFreq(100);
-
+  analogWrite(cold_pin, cold);
+  
   WiFi.mode(WIFI_AP_STA);
   // WiFi.begin(sta_essid, sta_password);
   // WiFi.config(sta_ip, sta_gw, sta_subnet, sta_dns);
@@ -76,8 +77,6 @@ bool config_read() {
   JsonObject& root = jsonBuffer.parseObject(buf.get());
   if(!root.success()) return false;
     cold = root["cold"];
-    Serial.print("json read:");
-    Serial.println(cold);
   configFile.close();
   return true;
 }
@@ -89,8 +88,6 @@ bool config_write() {
   if(!configFile) return false;
   JsonObject& root = jsonBuffer.createObject();
                   root["cold"] = cold;
-                  Serial.print("json write:");
-                  Serial.println(cold);
   root.prettyPrintTo(configFile);
   configFile.close();
   return true;
@@ -136,8 +133,6 @@ void setValue(String value) {
     cold = value.toInt();
     analogWrite(cold_pin, 1024-cold);
     webServer.send(200, "text/plain", "OK");
-    Serial.println("Calling write");
     config_write();
-    Serial.println("Write done");
   }
 }
