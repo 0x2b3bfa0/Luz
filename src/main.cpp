@@ -36,8 +36,8 @@ void loop() {
 
 void start() {
   analogWriteFreq(100);
-  analogWrite(cold_pin, cold);
-  
+  analogWrite(cold_pin, 1024 - cold);
+
   WiFi.mode(WIFI_AP_STA);
   // WiFi.begin(sta_essid, sta_password);
   // WiFi.config(sta_ip, sta_gw, sta_subnet, sta_dns);
