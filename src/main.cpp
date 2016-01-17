@@ -1,16 +1,19 @@
 #include "main.h"
 
 
-File configFile;
 DNSServer dnsServer;
 ESP8266WebServer webServer(80);
-IPAddress apIP(192, 168, 1, 1);
 
+
+//  IPAddress ip;
+// ip.fromString("10.1.2.3");
+// Serial.println(ip);
 
 void setup() {
-  analogWriteFreq(100);
   Serial.begin(115200);
   Serial.println();
+
+  // Serial.setDebugOutput(true);
 
   if(!SPIFFS.begin()) {
     Serial.println("[!] Filesystem error!");
@@ -21,12 +24,6 @@ void setup() {
   } else {
     start();
   }
-  // Serial.setDebugOutput(true);
-  // ArduinoOTA.begin();
-
-  pinMode(brightness_pin, OUTPUT);
-  analogWrite(brightness_pin, brightness);
-
 }
 
 
@@ -38,57 +35,64 @@ void loop() {
 
 
 void start() {
+  analogWriteFreq(100);
+
   WiFi.mode(WIFI_AP_STA);
   // WiFi.begin(sta_essid, sta_password);
   // WiFi.config(sta_ip, sta_gw, sta_subnet, sta_dns);
-  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+  WiFi.softAPConfig(IPAddress(192, 168, 1, 1), IPAddress(192, 168, 1, 1), IPAddress(255, 255, 255, 0));
   WiFi.softAP("Luz", NULL, 6); // 	WiFi.softAP(ssid, password, channel, hide_ssid);
 
-  dnsServer.start(53, "*", apIP);
+  // ArduinoOTA.begin();
+
+  dnsServer.start(53, "*", IPAddress(192, 168, 1, 1));
 
   webServer.onNotFound(handleRoot);
   webServer.on("/", handleRoot);
   webServer.begin();
+
+  pinMode(cold_pin, OUTPUT);
+  analogWrite(cold_pin, cold);
 }
 
 
 void fail() {
-  Serial.println("[!] Halted!");
-  while(1) delay(1);
+  ap_essid = new char[7];
+  sprintf(ap_essid, "%06x", ESP.getChipId());
+  digitalWrite(cold_pin, LOW);
+  Serial.println(ap_essid);
+  Serial.println("[!] Fatal error, crashing!");
+//  while(1) delay(1);
 }
 
 
 bool config_read() {
   DynamicJsonBuffer jsonBuffer;
-  configFile = SPIFFS.open("/config.json", "r");
-  if(!configFile) {
-    Serial.println("NOT CONFIGFILE... Something bad happens...");
-    return false;
-  }
+  File configFile = SPIFFS.open("/config.json", "r");
+  if(!configFile) return false;
   size_t size = configFile.size();
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
   JsonObject& root = jsonBuffer.parseObject(buf.get());
-  if(!root.success()) {
-    Serial.println("Non-success ¿why?");
-    return false;
-  }
-    brightness = root["brightness"];
+  if(!root.success()) return false;
+    cold = root["cold"];
     Serial.print("json read:");
-    Serial.println(brightness);
+    Serial.println(cold);
+  configFile.close();
   return true;
 }
 
 
 bool config_write() {
   DynamicJsonBuffer jsonBuffer;
-  configFile = SPIFFS.open("/config.json", "w");
+  File configFile = SPIFFS.open("/config.json", "w");
   if(!configFile) return false;
   JsonObject& root = jsonBuffer.createObject();
-                  root["brightness"] = brightness;
+                  root["cold"] = cold;
                   Serial.print("json write:");
-                  Serial.println(brightness);
-  root.printTo(configFile);
+                  Serial.println(cold);
+  root.prettyPrintTo(configFile);
+  configFile.close();
   return true;
 }
 
@@ -96,7 +100,7 @@ bool config_write() {
 void handleRoot() {
   String uri = webServer.uri();
   if(webServer.hasArg("value")) {
-    setBrightness(webServer.arg("value"));
+    setValue(webServer.arg("value"));
   } else if(SPIFFS.exists(uri)) {
 //} else if(SPIFFS.exists(uri) && uri != "/config.json") {
     streamFile(uri);
@@ -125,13 +129,15 @@ void streamFile(String filename) {
 }
 
 
-void setBrightness(String value) {
+void setValue(String value) {
   if(value == "get") {
-    webServer.send(200, "text/plain", String(brightness));
+    webServer.send(200, "text/plain", String(cold));
   } else {
-    brightness = value.toInt();
-    analogWrite(brightness_pin, 1024-brightness);
+    cold = value.toInt();
+    analogWrite(cold_pin, 1024-cold);
     webServer.send(200, "text/plain", "OK");
+    Serial.println("Calling write");
     config_write();
+    Serial.println("Write done");
   }
 }

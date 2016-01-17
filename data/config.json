@@ -23,6 +23,7 @@
 
   },
   "light": {
-    "brightness": 0
+    "cold": 0
+    "warm": 0
   }
 }
