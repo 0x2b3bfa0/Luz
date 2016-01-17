@@ -17,7 +17,7 @@ void setup() {
     fail();
   } else if(!config_read()) {
     Serial.println("[!] Configuration error!");
-    fail();
+    start();  // fail();
   } else {
     start();
   }
@@ -38,17 +38,17 @@ void loop() {
 
 
 void start() {
-   WiFi.mode(WIFI_AP_STA);
-   WiFi.begin()
-   WiFi.config()
-   WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
-   WiFi.softAP("Luz"); // 	WiFi.softAP(ssid, password);
+  WiFi.mode(WIFI_AP_STA);
+  // WiFi.begin(sta_essid, sta_password);
+  // WiFi.config(sta_ip, sta_gw, sta_subnet, sta_dns);
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+  WiFi.softAP("Luz", NULL, 6); // 	WiFi.softAP(ssid, password, channel, hide_ssid);
 
-   dnsServer.start(53, "*", apIP);
+  dnsServer.start(53, "*", apIP);
 
-   webServer.onNotFound(handleRoot);
-   webServer.on("/", handleRoot);
-   webServer.begin();
+  webServer.onNotFound(handleRoot);
+  webServer.on("/", handleRoot);
+  webServer.begin();
 }
 
 
@@ -61,15 +61,21 @@ void fail() {
 bool config_read() {
   DynamicJsonBuffer jsonBuffer;
   configFile = SPIFFS.open("/config.json", "r");
-  if(!configFile) return false;
+  if(!configFile) {
+    Serial.println("NOT CONFIGFILE... Something bad happens...");
+    return false;
+  }
   size_t size = configFile.size();
   std::unique_ptr<char[]> buf(new char[size]);
   configFile.readBytes(buf.get(), size);
   JsonObject& root = jsonBuffer.parseObject(buf.get());
-  if(!root.success()) return false;
-                      const char* brightness = root["brightness"];
-                      Serial.print("Level: ");
-                      Serial.println(brightness);
+  if(!root.success()) {
+    Serial.println("Non-success ¿why?");
+    return false;
+  }
+    brightness = root["brightness"];
+    Serial.print("json read:");
+    Serial.println(brightness);
   return true;
 }
 
@@ -80,6 +86,8 @@ bool config_write() {
   if(!configFile) return false;
   JsonObject& root = jsonBuffer.createObject();
                   root["brightness"] = brightness;
+                  Serial.print("json write:");
+                  Serial.println(brightness);
   root.printTo(configFile);
   return true;
 }
@@ -99,16 +107,16 @@ void handleRoot() {
 
 
 void streamFile(String filename) {
-  File file = SPIFFS.open(filename, "r");
   String mimetype = "text/plain";
-  if (filename.endsWith(".html")) mimetype = "text/html";
-  else if(filename.endsWith(".json")) mimetype = "application/json";
-  else if(filename.endsWith(".htm")) mimetype = "text/html";
-  else if(filename.endsWith(".css")) mimetype = "text/css";
+  File file = SPIFFS.open(filename, "r");
+  if (filename.endsWith(".json")) mimetype = "application/json";
+  else if(filename.endsWith(".html")) mimetype = "text/html";
+  else if(filename.endsWith(".ico")) mimetype = "image/x-icon";
+  else if(filename.endsWith(".jpg")) mimetype = "image/jpeg";
   else if(filename.endsWith(".png")) mimetype = "image/png";
   else if(filename.endsWith(".gif")) mimetype = "image/gif";
-  else if(filename.endsWith(".jpg")) mimetype = "image/jpeg";
-  else if(filename.endsWith(".ico")) mimetype = "image/x-icon";
+  else if(filename.endsWith(".htm")) mimetype = "text/html";
+  else if(filename.endsWith(".css")) mimetype = "text/css";
   else if(filename.endsWith(".xml")) mimetype = "text/xml";
   else if(filename.endsWith(".zip")) mimetype = "application/zip";
   else if(filename.endsWith(".js")) mimetype = "application/javascript";
@@ -119,11 +127,11 @@ void streamFile(String filename) {
 
 void setBrightness(String value) {
   if(value == "get") {
-    String state = String(1024 - analogRead(brightness_pin));
-    webServer.send(200, "text/plain", state);
+    webServer.send(200, "text/plain", String(brightness));
   } else {
-    brightness = 1024 - value.toInt();
-    analogWrite(brightness_pin, brightness);
+    brightness = value.toInt();
+    analogWrite(brightness_pin, 1024-brightness);
     webServer.send(200, "text/plain", "OK");
+    config_write();
   }
 }

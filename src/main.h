@@ -21,4 +21,4 @@ bool config_write();
 void setBrightness(String value);
 
 int brightness;
-int brightness_pin;
+int brightness_pin = 2;
