@@ -10,6 +10,7 @@ ESP8266WebServer webServer(80);
 // Serial.println(ip);
 
 void setup() {
+  pinMode(cold_pin, OUTPUT);
   Serial.begin(115200);
   Serial.println();
 
@@ -51,9 +52,6 @@ void start() {
   webServer.onNotFound(handleRoot);
   webServer.on("/", handleRoot);
   webServer.begin();
-
-  pinMode(cold_pin, OUTPUT);
-  analogWrite(cold_pin, cold);
 }
 
 
@@ -131,7 +129,7 @@ void setValue(String value) {
     webServer.send(200, "text/plain", String(cold));
   } else {
     cold = value.toInt();
-    analogWrite(cold_pin, 1024-cold);
+    analogWrite(cold_pin, 1024 - cold);
     webServer.send(200, "text/plain", "OK");
     config_write();
   }
