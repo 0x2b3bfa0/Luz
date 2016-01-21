@@ -1,4 +1,24 @@
 {
+  "hardware": {
+    "pwm_frequency": 100,
+    "gpio": {
+      "warm": {
+        "pin": 0,
+        "mode": "out",
+        "store": true,
+        "enabled": true,
+        "inverting": true,
+        "value": 0
+      },
+      "cold": {
+        "pin": 2,
+        "store": false,
+        "enabled": true,
+        "inverting": true,
+        "value": 0
+      }
+    }
+  },
   "network": {
     "access_point": {
       "essid": "Luz",
@@ -6,7 +26,7 @@
       "password": "",
       "gateway": "192.168.1.1",
       "subnet_mask": "192.168.1.1",
-      "ip_address": "192.168.1.1",
+      "ip_address": "192.168.1.1"
     },
     "client": {
       "essid": "",
@@ -17,13 +37,12 @@
       "subnet_mask": "192.168.1.1",
       "ip_address": "192.168.1.1"
     },
-    "txmode": "n",
-    "txpower": "20",
+    "mode": "n",
+    "power": "20",
     "channel": "6"
-
   },
-  "light": {
-    "cold": 0
-    "warm": 0
+  "preset": {
+    "type": "Light",
+    "name": "Light-<uuid>"
   }
 }

@@ -1,3 +1,5 @@
+#include <map>
+
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
@@ -5,6 +7,7 @@
 // // #include <WiFiUdp.h>
 // // #include <ArduinoOTA.h>
 #include <ESP8266WebServer.h>
+//#include <WebSocketsServer.h>
 #include <ArduinoJson.h>
 #include <DNSServer.h>
 #include <FS.h>
@@ -12,16 +15,32 @@
 #define MAGIC 0x2BEC6 // must be 3 bytes or less
 #define DARK_MAGIC 0xDEFEC8 // must be 3 bytes or less
 
+using namespace std;
+
 void setup();
 void loop();
 
 void fail();
 void start();
-void streamFile(String filename);
-void handleRoot();
 bool config_read();
 bool config_write();
-void setValue(String value);
+void handleRoot();
+void streamFile(String filename);
+void httpInterface();
+//void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght);
+
+struct io {
+  bool inverting = false;
+  bool enabled = false;
+  bool store = false;
+  int mode = OUTPUT;
+  int value = 0;
+  int pin;
+};
+
+std::map<char*, io> gpios;
+
+int pwm_frequency;
 
 IPAddress ap_ip;
 IPAddress ap_gw;
@@ -32,6 +51,9 @@ IPAddress sta_ip;
 IPAddress sta_gw;
 IPAddress sta_dns;
 IPAddress sta_subnet;
+
+char* type;
+char* name;
 
 char* ap_essid;
 char* ap_password;
