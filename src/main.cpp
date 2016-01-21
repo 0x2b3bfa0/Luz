@@ -16,9 +16,9 @@ void setup() {
   } else if(!config_read()) {
     Serial.println("[!] Configuration error!");
     start();  // fail();
-  // } else if(!MDNS.begin(name)) {
-  //   Serial.println("[!] mDNS error!");
-  //   fail();
+  } else if(!MDNS.begin(name)) {
+    Serial.println("[!] mDNS error!");
+    fail();
   } else {
     start();
   }
@@ -85,35 +85,6 @@ bool config_read() {
     Serial.println("[!] Configuration parsing error.");
     return false;
   }
-  // if(root.containsKey("hardware") && root["hardware"].is<JsonObject&>()) {
-  //   JsonObject& hardware = root["hardware"];
-  //   if (hardware.containsKey("pwm_frequency")) {
-  //     if(!hardware["pwm_frequency"].is<int>()) {
-  //       Serial.println("[!] JSON parsing error!");
-  //       return false;
-  //     }
-  //     pwm_frequency = hardware["pwm_frequency"];
-  //     Serial.printf("PWM frequency: %d Hz\n", pwm_frequency);
-  //     analogWriteFreq(pwm_frequency);
-  //   }
-  //   if(hardware.containsKey("gpio") && hardware["gpio"].is<JsonObject&>()) {
-  //     JsonObject& gpio = hardware["gpio"];
-  //     for (JsonObject::iterator it=gpio.begin(); it!=gpio.end(); ++it) {
-  //       Serial.println();
-  //       Serial.printf("GPIO: %s\n", it->key);
-  //       if(it->value.is<JsonObject&>()) {
-  //         JsonObject& trit = it->value;
-  //         for (JsonObject::iterator dit=trit.begin(); dit!=trit.end(); ++dit) {
-  //           Serial.printf("  %s: ", dit->key);
-  //           Serial.println(dit->value.asString());
-  //         }
-  //       }
-  //     }
-  //   }
-  // } else { Serial.println("[!] Err2"); return false; }
-  //  IPAddress ip;
-  // ip.fromString("10.1.2.3");
-  // Serial.println(ip);
   for (auto root : json) {
     if (strcmp(root.key, "network") == 0) {
       if ((!root.value.is<JsonObject&>()) || network_parsed) return false;
@@ -129,9 +100,9 @@ bool config_read() {
         } else if (strcmp(hardware.key, "gpio") == 0) {
           if (!hardware.value.is<JsonObject&>()) return false;
           for (auto gpio : hardware.value.as<JsonObject&>()) {
-            io current_gpio;
+            io current_gpio = {};
             if (!gpio.value.is<JsonObject&>()) return false;
-            if (gpios.count((char*)(const char*)gpio.key) != 0) return false;
+            //if (gpios.count(String(gpio.key)) != 0) return false;
             if (!gpio.value.as<JsonObject&>().containsKey("pin")) return false;
             if (!gpio.value.as<JsonObject&>().containsKey("mode")) return false;
             for (auto item : gpio.value.as<JsonObject&>()) {
@@ -159,10 +130,10 @@ bool config_read() {
               } else { return false; }
             }
             if (current_gpio.enabled) {
-              //gpios[(char*)gpio.key] = current_gpio;
+              if (gpios_pointer > 9) return false;
+              gpios[gpios_pointer] = current_gpio;
+              gpios_pointer++;
             }
-            current_gpio = {};
-            // gpios.at(key)
           }
         } else { return false; }
       }
@@ -220,7 +191,7 @@ void streamFile(String filename) {
   webServer.streamFile(file, mimetype);
   file.close();
 }
-//
+
 // void webSocketEvent(uint8_t num, WStype_t type, uint8_t * payload, size_t lenght) {
 //   switch(type) {
 //     case WStype_DISCONNECTED:

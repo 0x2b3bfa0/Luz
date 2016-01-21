@@ -1,5 +1,3 @@
-#include <map>
-
 #include <Arduino.h>
 
 #include <ESP8266WiFi.h>
@@ -15,7 +13,7 @@
 #define MAGIC 0x2BEC6 // must be 3 bytes or less
 #define DARK_MAGIC 0xDEFEC8 // must be 3 bytes or less
 
-using namespace std;
+// using namespace std;
 
 void setup();
 void loop();
@@ -36,9 +34,9 @@ struct io {
   int mode = OUTPUT;
   int value = 0;
   int pin;
-};
-
-std::map<char*, io> gpios;
+  char* name;
+} gpios[9];
+int gpios_pointer = 0;
 
 int pwm_frequency;
 
